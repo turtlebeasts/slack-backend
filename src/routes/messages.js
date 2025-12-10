@@ -4,7 +4,6 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-// GET /api/messages/:channelId?cursor=&limit=
 router.get("/:channelId", auth, async (req, res) => {
   try {
     const channelId = parseInt(req.params.channelId, 10);
@@ -29,10 +28,8 @@ router.get("/:channelId", auth, async (req, res) => {
 
     const result = await db.query(query, params);
 
-    // reverse rows so they are chronological (oldest -> newest)
     const rows = result.rows.reverse();
 
-    // 🔥 normalize to a consistent shape like the socket payload
     const messages = rows.map((r) => ({
       id: r.id,
       channel_id: channelId,
@@ -44,7 +41,6 @@ router.get("/:channelId", auth, async (req, res) => {
       },
     }));
 
-    // new cursor = oldest message's created_at (or null)
     const nextCursor = messages.length > 0 ? messages[0].created_at : null;
 
     res.json({ messages, nextCursor });
@@ -54,7 +50,6 @@ router.get("/:channelId", auth, async (req, res) => {
   }
 });
 
-// POST /api/messages/:channelId - non-socket fallback (useful for testing)
 router.post("/:channelId", auth, async (req, res) => {
   try {
     const channelId = parseInt(req.params.channelId, 10);
