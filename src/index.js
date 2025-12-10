@@ -7,7 +7,6 @@ const PORT = process.env.PORT || 5000;
 
 const server = http.createServer(app);
 
-// Attach Socket.IO to same server
 initChatSocket(server);
 
 server.listen(PORT, () => {

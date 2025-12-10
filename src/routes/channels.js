@@ -4,7 +4,6 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-// GET /api/channels/joined - channels current user has joined
 router.get("/joined", auth, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -27,7 +26,6 @@ router.get("/joined", auth, async (req, res) => {
   }
 });
 
-// GET /api/channels - list all channels with member count
 router.get("/", auth, async (req, res) => {
   try {
     const result = await db.query(
@@ -45,7 +43,6 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
-// POST /api/channels - create channel
 router.post("/", auth, async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -56,7 +53,6 @@ router.post("/", auth, async (req, res) => {
       [name, description || null, req.user.id]
     );
 
-    // creator auto-joins channel
     await db.query(
       "INSERT INTO channel_members (channel_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
       [result.rows[0].id, req.user.id]
@@ -66,14 +62,12 @@ router.post("/", auth, async (req, res) => {
   } catch (err) {
     console.error("Create channel error:", err);
     if (err.code === "23505") {
-      // unique violation on name
       return res.status(409).json({ message: "Channel name already exists" });
     }
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// POST /api/channels/:id/join
 router.post("/:id/join", auth, async (req, res) => {
   try {
     const channelId = parseInt(req.params.id, 10);
@@ -90,7 +84,6 @@ router.post("/:id/join", auth, async (req, res) => {
   }
 });
 
-// POST /api/channels/:id/leave
 router.post("/:id/leave", auth, async (req, res) => {
   try {
     const channelId = parseInt(req.params.id, 10);
@@ -107,7 +100,6 @@ router.post("/:id/leave", auth, async (req, res) => {
   }
 });
 
-// GET /api/channels/:id - channel detail with members (optional, useful later)
 router.get("/:id", auth, async (req, res) => {
   try {
     const channelId = parseInt(req.params.id, 10);

@@ -13,7 +13,6 @@ function initChatSocket(server) {
     },
   });
 
-  // simple in-memory presence: { userId: count_of_sockets }
   const onlineUsers = new Map();
 
   io.use((socket, next) => {
@@ -35,7 +34,6 @@ function initChatSocket(server) {
 
   io.on("connection", (socket) => {
     const userId = socket.user.id;
-    // update presence
     const current = onlineUsers.get(userId) || 0;
     onlineUsers.set(userId, current + 1);
     broadcastPresence();
@@ -44,7 +42,6 @@ function initChatSocket(server) {
       `User ${userId} connected, sockets: ${onlineUsers.get(userId)}`
     );
 
-    // Client will emit this after selecting channel
     socket.on("channel:join", (channelId) => {
       socket.join(`channel:${channelId}`);
     });
@@ -53,7 +50,6 @@ function initChatSocket(server) {
       socket.leave(`channel:${channelId}`);
     });
 
-    // Real-time message send
     socket.on("message:send", async ({ channelId, content }) => {
       try {
         if (!content || !content.trim()) return;
@@ -66,7 +62,6 @@ function initChatSocket(server) {
 
         const message = result.rows[0];
 
-        // Attach user info for frontend
         const payload = {
           id: message.id,
           channel_id: message.channel_id,
@@ -81,7 +76,6 @@ function initChatSocket(server) {
         io.to(`channel:${channelId}`).emit("message:new", payload);
       } catch (err) {
         console.error("Socket message send error:", err);
-        // optionally emit error back
         socket.emit("error", { message: "Failed to send message" });
       }
     });
